@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { APIClient } from '../src/api/client';
 import { Project } from '../src/types/api';
 import { ProjectCard } from '../src/components/ProjectCard';
+import "../global.css";
 
 // You should store this JWT securely in practice
 const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
@@ -49,7 +50,7 @@ export default function Index() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#f4511e" />
       </View>
     );
@@ -57,14 +58,14 @@ export default function Index() {
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.error}>{error}</Text>
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500 text-center mx-4 my-4">{error}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-gray-100">
       <FlatList
         data={projects}
         renderItem={({ item }) => <ProjectCard project={item} />}
@@ -76,7 +77,7 @@ export default function Index() {
           />
         }
         ListEmptyComponent={
-          <View style={styles.centered}>
+          <View className="flex-1 justify-center items-center">
             <Text>No projects available</Text>
           </View>
         }
@@ -84,20 +85,3 @@ export default function Index() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-    margin: 16,
-  },
-});
