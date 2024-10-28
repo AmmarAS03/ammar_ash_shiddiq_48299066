@@ -10,11 +10,14 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const router = useRouter();
+  const handlePress = () => {
+    router.push(`/(projects)/${project.id}`);
+  };
 
   return (
     <TouchableOpacity 
       className="bg-white rounded-lg p-4 mx-4 my-2 shadow-md"
-      // onPress={() => router.push(`/project/${project.id}`)}
+      onPress={handlePress}
     >
       <Text className="text-lg font-bold mb-2">
         {project.title}

@@ -1,6 +1,7 @@
 {
   "name": "storypath-player",
   "version": "1.0.0",
+  "type": "commonjs",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

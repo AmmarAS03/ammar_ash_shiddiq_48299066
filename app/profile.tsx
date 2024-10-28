@@ -21,7 +21,6 @@ export default function Profile() {
     const [inputUsername, setInputUsername] = useState(username || '');
 
     const pickImage = async () => {
-        // Request permission
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         
         if (status !== 'granted') {
@@ -60,29 +59,31 @@ export default function Profile() {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.profileImageContainer}>
-                <TouchableOpacity onPress={pickImage} style={styles.imagePickerButton}>
+        <View className="flex-1 p-5 bg-white">
+            <View className="items-center mt-5 mb-8">
+                <TouchableOpacity onPress={pickImage} className="relative">
                     {profileImage ? (
                         <Image 
                             source={{ uri: profileImage }} 
-                            style={styles.profileImage}
+                            className="w-[120px] h-[120px] rounded-full"
                         />
                     ) : (
-                        <View style={styles.placeholderImage}>
+                        <View className="w-[120px] h-[120px] rounded-full bg-gray-100 justify-center items-center border border-gray-300">
                             <Ionicons name="person" size={40} color="#666" />
                         </View>
                     )}
-                    <View style={styles.editBadge}>
+                    <View className="absolute right-0 bottom-0 bg-[#f4511e] w-9 h-9 rounded-full justify-center items-center border-2 border-white">
                         <Ionicons name="camera" size={20} color="white" />
                     </View>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Username</Text>
+            <View className="mb-5">
+                <Text className="text-base text-gray-700 mb-2 font-medium">
+                    Username
+                </Text>
                 <TextInput
-                    style={styles.input}
+                    className="border border-gray-300 rounded-lg p-3 text-base bg-gray-50"
                     value={inputUsername}
                     onChangeText={setInputUsername}
                     placeholder="Enter your username"
@@ -92,103 +93,22 @@ export default function Profile() {
             </View>
 
             <TouchableOpacity 
-                style={styles.saveButton} 
+                className="bg-[#f4511e] p-4 rounded-lg items-center my-2.5"
                 onPress={saveProfile}
             >
-                <Text style={styles.saveButtonText}>Save Profile</Text>
+                <Text className="text-white text-base font-semibold">
+                    Save Profile
+                </Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-                style={styles.cancelButton}
+                className="p-4 rounded-lg items-center border border-[#f4511e]"
                 onPress={() => router.back()}
             >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text className="text-[#f4511e] text-base font-semibold">
+                    Cancel
+                </Text>
             </TouchableOpacity>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-    },
-    profileImageContainer: {
-        alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 30,
-    },
-    imagePickerButton: {
-        position: 'relative',
-    },
-    profileImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-    },
-    placeholderImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#f0f0f0',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    editBadge: {
-        position: 'absolute',
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#f4511e',
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'white',
-    },
-    inputContainer: {
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 8,
-        fontWeight: '500',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#f9f9f9',
-    },
-    saveButton: {
-        backgroundColor: '#f4511e',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    saveButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    cancelButton: {
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#f4511e',
-    },
-    cancelButtonText: {
-        color: '#f4511e',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-});
