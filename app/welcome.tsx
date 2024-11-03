@@ -21,33 +21,6 @@ export default function Welcome() {
     useUserStore();
   const [inputUsername, setInputUsername] = useState(username || "");
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Needed",
-        "Sorry, we need camera roll permissions to upload a profile picture."
-      );
-      return;
-    }
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0].uri) {
-        setProfileImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to pick image");
-    }
-  };
-
   const saveProfile = () => {
     if (!inputUsername.trim()) {
       Alert.alert("Error", "Please enter a username");

@@ -20,7 +20,7 @@ export default function ProjectTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Project',
+          title: 'Project Home',
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}

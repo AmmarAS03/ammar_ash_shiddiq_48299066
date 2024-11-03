@@ -1,7 +1,6 @@
-// app/(projects)/[id].tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { APIClient } from '../../../src/api/client';
 import { Project } from '../../../src/types/api';
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +13,7 @@ export default function ProjectDetails() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     const loadProject = async () => {
       try {
@@ -27,6 +26,10 @@ export default function ProjectDetails() {
         }
         
         setProject(foundProject);
+        // Update the navigation title with the project title
+        router.setParams({
+          title: foundProject.title
+        });
       } catch (err) {
         setError('Failed to load project details. Please try again.');
         console.error('Error loading project:', err);
@@ -37,6 +40,15 @@ export default function ProjectDetails() {
 
     loadProject();
   }, [id]);
+
+  // Custom header configuration
+  useEffect(() => {
+    if (project) {
+      router.setParams({
+        title: project.title
+      });
+    }
+  }, [project]);
 
   if (loading) {
     return (
@@ -50,51 +62,49 @@ export default function ProjectDetails() {
     return (
       <View className="flex-1 justify-center items-center bg-gray-100">
         <Text className="text-red-500 text-center mx-4">{error || 'Project not found'}</Text>
-        <View className="mt-4">
-          <Text 
-            className="text-f4511e text-center"
-            onPress={() => router.back()}
-          >
+        <Pressable 
+          className="mt-4"
+          onPress={() => router.back()}
+        >
+          <Text className="text-[#f4511e] text-center">
             Go back to projects
           </Text>
-        </View>
+        </Pressable>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-100">
-      <View className="bg-white m-4 p-4 rounded-lg shadow-sm">
-        {/* Project Title */}
-        <Text className="text-2xl font-bold mb-4">{project.title}</Text>
-
-        {/* Project Description */}
-        <View className="mb-4">
-          <Text className="text-gray-700">{project.description}</Text>
-        </View>
-
-        {/* Project Status */}
-        <View className="flex-row items-center mb-4">
-          <Ionicons 
-            name="checkmark-circle" 
-            size={20} 
-            color="#4CAF50" 
-          />
-          <Text className="ml-2 text-gray-600">Published</Text>
-        </View>
-
-        {/* Project Dates */}
-        <View className="mt-4 pt-4 border-t border-gray-200">
-          <Text className="text-gray-600">
-            Initial Clue: {project.initial_clue}
+    <>
+      <ScrollView className="flex-1 bg-gray-100">
+        {/* Instructions Card */}
+        <View className="bg-white m-4 p-4 rounded-lg shadow-sm">
+          <Text className="text-lg font-bold mb-2">Instructions</Text>
+          <Text className="text-gray-700 mb-4">
+            {project.instructions || 'Follow the clues and scan the QR codes once you get to the building location.'}
           </Text>
-          {project.instructions && (
-            <Text className="text-gray-600 mt-1">
-              instructions: {project.instructions}
-            </Text>
-          )}
+          
+          <Text className="text-lg font-bold mb-2">Initial Clue</Text>
+          <Text className="text-gray-700">
+            {project.initial_clue}
+          </Text>
         </View>
-      </View>
-    </ScrollView>
+
+        {/* Stats Card */}
+        <View className="flex-row justify-between mx-4">
+          <View className="bg-white p-4 rounded-lg shadow-sm flex-1 mr-2">
+            <Text className="text-pink-500 text-2xl font-bold text-center">0</Text>
+            <Text className="text-center text-gray-600">Points</Text>
+            <Text className="text-center text-gray-600">0/20</Text>
+          </View>
+          
+          <View className="bg-white p-4 rounded-lg shadow-sm flex-1 ml-2">
+            <Text className="text-pink-500 text-2xl font-bold text-center">0</Text>
+            <Text className="text-center text-gray-600">Locations Visited</Text>
+            <Text className="text-center text-gray-600">0/3</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </>
   );
 }

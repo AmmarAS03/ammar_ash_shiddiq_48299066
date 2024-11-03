@@ -11,7 +11,13 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   const router = useRouter();
   const handlePress = () => {
-    router.push(`/(projects)/${project.id}`);
+    router.push({
+      pathname: `/(projects)/[id]`,
+      params: {
+        id: project.id.toString(),
+        title: project.title
+      }
+    });
   };
 
   return (
