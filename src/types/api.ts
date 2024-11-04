@@ -11,9 +11,22 @@ export interface Project {
 }
 
 export interface Location {
+    id: number;
+    project_id: number;
     location_name: string;
-    location_trigger: 'Location Entry' | 'QR Code Scan' | 'Both Location Entry and QR Code Scan';
-    location_position: string; // Format: "(27.4975,153.013276)"
+    location_trigger: string;
+    location_position: string;
+    score_points: number;
+    clue: string;
+    location_content: string;
+}
+
+export interface ProjectLocation {
+    id: number;
+    project_id: number;
+    location_name: string;
+    location_trigger: string;
+    location_position: string;
     score_points: number;
     clue: string;
     location_content: string;
@@ -23,7 +36,7 @@ export interface Tracking {
     id: number;
     project_id: number;
     location_id: number;
-    points: number;
     username: string;
+    points: number;
     participant_username: string;
 }

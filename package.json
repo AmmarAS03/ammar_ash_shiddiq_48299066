@@ -31,7 +31,8 @@
     "react-native-screens": "3.31.1",
     "tailwindcss": "^3.4.14",
     "zustand": "^5.0.0",
-    "expo-camera": "~15.0.16"
+    "expo-camera": "~15.0.16",
+    "react-native-webview": "13.8.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
