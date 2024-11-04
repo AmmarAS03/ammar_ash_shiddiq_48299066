@@ -13,6 +13,25 @@ interface LocationCoords {
   longitude: number;
 }
 
+/**
+ * Map Screen Component
+ *
+ * Displays an interactive map showing:
+ * - User's current location
+ * - Project locations (all or unlocked only)
+ * - Location markers with clues
+ * - Geofencing circles around locations
+ *
+ * Uses expo-location for real-time location tracking and
+ * react-native-maps for map display.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * // In the navigation
+ * <Tabs.Screen name="map" component={MapScreen} />
+ * ```
+ */
 export default function MapScreen() {
   const { apiClient } = useAPI();
   const router = useRouter();
@@ -29,6 +48,10 @@ export default function MapScreen() {
   const { id } = useLocalSearchParams();
   const projectId = id ? Number(id) : NaN;
   const { username } = useUserStore();
+
+  /**
+   * Redirects to profile if no username is set
+   */
   useEffect(() => {
     if (!username) {
       router.push("/profile");
@@ -36,6 +59,9 @@ export default function MapScreen() {
     }
   }, [username]);
 
+  /**
+   * Initializes map data and location tracking
+   */
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -51,6 +77,16 @@ export default function MapScreen() {
     initializeData();
   }, [projectId, refreshTrigger]);
 
+  /**
+   * Sets up location tracking and permissions
+   *
+   * Requests location permissions and starts watching user position
+   * with high accuracy settings.
+   *
+   * @async
+   * @returns {Promise<void>} Cleanup function to remove location subscription
+   * @throws {Error} When location permissions are denied
+   */
   const setupLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -87,6 +123,17 @@ export default function MapScreen() {
     }
   };
 
+  /**
+   * Fetches all project-related data
+   *
+   * Retrieves:
+   * - Project details
+   * - Location information
+   * - User's unlocked locations
+   *
+   * @async
+   * @throws {Error} When project is not found or data fetch fails
+   */
   const fetchProjectData = async () => {
     try {
       // Get project details
@@ -114,10 +161,20 @@ export default function MapScreen() {
     }
   };
 
+  /**
+   * Determines if all locations should be displayed
+   *
+   * @returns {boolean} True if all locations should be shown
+   */
   const shouldDisplayAllLocations = () => {
     return project?.homescreen_display === "Display all locations";
   };
-
+  
+  /**
+   * Gets the list of locations that should be visible on the map
+   *
+   * @returns {ProjectLocation[]} Array of locations to display
+   */
   const getVisibleLocations = () => {
     if (shouldDisplayAllLocations()) {
       return locations;
@@ -176,7 +233,9 @@ export default function MapScreen() {
                 coordinate={{ latitude: lat, longitude: lng }}
                 title={location.location_name}
                 pinColor={isUnlocked ? "green" : "red"}
-                description={isUnlocked || location.clue ? location.clue : undefined}
+                description={
+                  isUnlocked || location.clue ? location.clue : undefined
+                }
               />
               {(isUnlocked || shouldDisplayAllLocations()) && (
                 <Circle

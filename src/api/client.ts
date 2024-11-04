@@ -15,13 +15,40 @@ interface TrackingPayload {
   participant_username: string;
 }
 
+/**
+ * APIClient class for handling all API communications
+ *
+ * Provides methods for interacting with the project API, including
+ * fetching projects, tracking participants, and retrieving statistics.
+ *
+ * @class
+ * @example
+ * ```typescript
+ * const client = new APIClient('your-jwt-token');
+ * const projects = await client.getPublishedProjects();
+ * ```
+ */
 export class APIClient {
   private jwt: string;
 
+  /**
+   * Creates an instance of APIClient
+   * @param {string} jwt - JWT token for authentication
+   */
   constructor(jwt: string) {
     this.jwt = jwt;
   }
 
+  /**
+   * Generic fetch method with authentication
+   *
+   * @private
+   * @template T - Type of the response data
+   * @param {string} endpoint - API endpoint to fetch from
+   * @param {RequestInit} [options] - Fetch options
+   * @returns {Promise<T>} Response data
+   * @throws {Error} When the API request fails
+   */
   private async fetchWithAuth<T>(
     endpoint: string,
     options?: RequestInit
@@ -48,17 +75,31 @@ export class APIClient {
 
     return response.json();
   }
-
+  /**
+   * Fetches all published projects
+   * @returns {Promise<Project[]>} Array of published projects
+   */
   async getPublishedProjects(): Promise<Project[]> {
     return this.fetchWithAuth<Project[]>("/project?is_published=eq.true");
   }
 
+  /**
+   * Fetches locations for a specific project
+   * @param {number} projectId - ID of the project
+   * @returns {Promise<ProjectLocation[]>} Array of project locations
+   */
   async getProjectLocations(projectId: number): Promise<ProjectLocation[]> {
     return this.fetchWithAuth<ProjectLocation[]>(
       `/location?project_id=eq.${projectId}`
     );
   }
 
+  /**
+   * Tracks a participant's visit to a location
+   * @param {TrackingPayload} tracking - Tracking data payload
+   * @returns {Promise<void>}
+   * @throws {Error} When tracking fails
+   */
   async trackParticipant(tracking: TrackingPayload): Promise<void> {
     try {
       const response = await fetch(`${API_BASE_URL}/tracking`, {
@@ -82,24 +123,34 @@ export class APIClient {
     }
   }
 
+  /**
+   * Gets the number of unique participants for a project
+   * @param {number} projectId - ID of the project
+   * @returns {Promise<number>} Number of unique participants
+   */
   async getProjectParticipantCount(projectId: number): Promise<number> {
     try {
-        const participants = await this.fetchWithAuth<{ participant_username: string }[]>(
-            `/tracking?project_id=eq.${projectId}&select=participant_username`
-        );
-        
-        // Get unique participant usernames using Set
-        const uniqueParticipants = new Set(
-            participants.map(p => p.participant_username)
-        );
-        
-        return uniqueParticipants.size;
-    } catch (error) {
-        console.error('Error getting participant count:', error);
-        return 0;
-    }
-}
+      const participants = await this.fetchWithAuth<
+        { participant_username: string }[]
+      >(`/tracking?project_id=eq.${projectId}&select=participant_username`);
 
+      // Get unique participant usernames using Set
+      const uniqueParticipants = new Set(
+        participants.map((p) => p.participant_username)
+      );
+
+      return uniqueParticipants.size;
+    } catch (error) {
+      console.error("Error getting participant count:", error);
+      return 0;
+    }
+  }
+
+  /**
+   * Gets participant counts for multiple projects
+   * @param {number[]} projectIds - Array of project IDs
+   * @returns {Promise<Record<number, number>>} Map of project IDs to participant counts
+   */
   async getMultipleProjectParticipantCounts(
     projectIds: number[]
   ): Promise<Record<number, number>> {
@@ -123,6 +174,12 @@ export class APIClient {
     }
   }
 
+  /**
+   * Gets total points for a user in a specific project
+   * @param {number} projectId - ID of the project
+   * @param {string} participantUsername - Username of the participant
+   * @returns {Promise<number>} Total points earned
+   */
   async getUserProjectPoints(
     projectId: number,
     participantUsername: string
@@ -145,17 +202,21 @@ export class APIClient {
     }
   }
 
+  /**
+   * Gets the number of unique locations visited by a user in a project
+   * @param {number} projectId - ID of the project
+   * @param {string} participantUsername - Username of the participant
+   * @returns {Promise<number>} Number of unique locations visited
+   */
   async getUserVisitedLocations(
     projectId: number,
     participantUsername: string
   ): Promise<number> {
     try {
-      // Get unique locations visited by this user in this project
       const trackingData = await this.fetchWithAuth<Tracking[]>(
         `/tracking?project_id=eq.${projectId}&participant_username=eq.${participantUsername}&select=location_id`
       );
 
-      // Get unique location count
       const uniqueLocations = new Set(
         trackingData.map((track) => track.location_id)
       );
@@ -166,6 +227,12 @@ export class APIClient {
     }
   }
 
+  /**
+   * Gets IDs of locations visited by a user in a project
+   * @param {number} projectId - ID of the project
+   * @param {string | null} participantUsername - Username of the participant
+   * @returns {Promise<number[]>} Array of visited location IDs
+   */
   async getUserVisitedLocationIds(
     projectId: number,
     participantUsername: string | null
@@ -181,19 +248,28 @@ export class APIClient {
     }
   }
 
-  async getLocationParticipantCounts(projectId: number): Promise<Record<number, number>> {
+  /**
+   * Gets participant counts for each location in a project
+   * @param {number} projectId - ID of the project
+   * @returns {Promise<Record<number, number>>} Map of location IDs to participant counts
+   */
+  async getLocationParticipantCounts(
+    projectId: number
+  ): Promise<Record<number, number>> {
     try {
       // Get all tracking entries for this project, selecting location_id and participant_username
-      const trackingData = await this.fetchWithAuth<{
-        location_id: number;
-        participant_username: string;
-      }[]>(
+      const trackingData = await this.fetchWithAuth<
+        {
+          location_id: number;
+          participant_username: string;
+        }[]
+      >(
         `/tracking?project_id=eq.${projectId}&select=location_id,participant_username&distinct`
       );
-  
+
       // Create a map to store counts for each location
       const locationCounts: Record<number, number> = {};
-  
+
       // Group tracking data by location_id and count unique participants
       trackingData.forEach((track) => {
         if (!locationCounts[track.location_id]) {
@@ -205,7 +281,7 @@ export class APIClient {
           locationCounts[track.location_id] = uniqueParticipants.size;
         }
       });
-  
+
       return locationCounts;
     } catch (error) {
       console.error("Error getting location participant counts:", error);

@@ -1,4 +1,3 @@
-// src/components/ProjectCard.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
@@ -10,6 +9,28 @@ interface ProjectCardProps {
   project: Project;
 }
 
+/**
+ * ProjectCard component
+ * 
+ * Displays a card with project information including title, description,
+ * scoring method, and participant count. The card is clickable and navigates
+ * to the project detail page when pressed.
+ * 
+ * @component
+ * @param {ProjectCardProps} props - Component props
+ * 
+ * @example
+ * ```tsx
+ * const project = {
+ *   id: 1,
+ *   title: "Project Title",
+ *   description: "Project Description",
+ *   participant_scoring: "individual"
+ * };
+ * 
+ * <ProjectCard project={project} />
+ * ```
+ */
 export function ProjectCard({ project }: ProjectCardProps) {
   const { apiClient } = useAPI();
   const router = useRouter();

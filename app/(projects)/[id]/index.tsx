@@ -15,6 +15,30 @@ import WebView from "react-native-webview";
 import { useProjectContext } from "@/context/ProjectContext";
 import { useAPI } from "@/context/APIContext";
 
+/**
+ * Project Details Screen Component
+ *
+ * Displays comprehensive information about a specific project including:
+ * - Project instructions and initial clue
+ * - User progress statistics
+ * - Visited locations with content
+ * - Participant counts
+ *
+ * Uses multiple contexts:
+ * - ProjectContext for refresh state
+ * - APIContext for data fetching
+ * - UserStore for user information
+ *
+ * @component
+ * @example
+ * ```tsx
+ * // Accessed through navigation
+ * router.push({
+ *   pathname: "(projects)/[id]",
+ *   params: { id: "1" }
+ * });
+ * ```
+ */
 export default function ProjectDetails() {
   const { apiClient } = useAPI();
   const { id } = useLocalSearchParams();
@@ -33,6 +57,19 @@ export default function ProjectDetails() {
     Record<number, number>
   >({});
 
+  /**
+   * Loads all project-related data
+   *
+   * Fetches and sets:
+   * - Project details
+   * - Location information
+   * - User progress
+   * - Participant counts
+   * - Total points possible
+   *
+   * @async
+   * @function
+   */
   useEffect(() => {
     const loadProjectData = async () => {
       try {
@@ -102,7 +139,9 @@ export default function ProjectDetails() {
     loadProjectData();
   }, [id, refreshTrigger]);
 
-  // Custom header configuration
+  /**
+   * Updates navigation header with project title
+   */
   useEffect(() => {
     if (project) {
       router.setParams({
@@ -119,6 +158,11 @@ export default function ProjectDetails() {
     );
   }
 
+  /**
+   * Converts project scoring method to display text
+   *
+   * @returns {string} Human-readable scoring method description
+   */
   const getScoringMethodDisplay = () => {
     switch (project?.participant_scoring) {
       case "Not Scored":

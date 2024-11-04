@@ -15,6 +15,17 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { APIProvider } from "@/context/APIContext";
 import "../global.css";
 
+/**
+ * Custom drawer content component
+ * 
+ * Renders a customized drawer with:
+ * - User information header (when user is logged in)
+ * - Navigation items
+ * - Logout button (when user is logged in)
+ * 
+ * @component
+ * @param {CustomDrawerContentProps} props - Drawer content props from react-navigation
+ */
 function CustomDrawerContent(props: any) {
   const { username } = useUserStore();
 
@@ -45,6 +56,26 @@ function CustomDrawerContent(props: any) {
   );
 }
 
+/**
+ * Root layout component for the application
+ * 
+ * Provides the main navigation structure using expo-router drawer navigation.
+ * Includes:
+ * - Custom drawer navigation
+ * - Screen configurations
+ * - API context provider
+ * - Font loading handling
+ * - Gesture handler root view
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * // App entry point
+ * export default function App() {
+ *   return <Layout />;
+ * }
+ * ```
+ */
 export default function Layout() {
   const [fontsLoaded] = useFonts({});
 

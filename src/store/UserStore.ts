@@ -1,9 +1,15 @@
-// src/store/UserStore.ts
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-
+/**
+ * Interface defining the structure and actions available in the UserStore
+ * 
+ * @interface UserState
+ * @property {string | null} username - Current username of the logged-in user
+ * @property {string | null} profileImage - URL or path to the user's profile image
+ * @property {boolean} isLoggedIn - Flag indicating whether a user is currently logged in
+ */
 interface UserState {
     username: string | null;
     profileImage: string | null;
@@ -14,6 +20,23 @@ interface UserState {
     clearStorage: () => Promise<void>;
 }
 
+/**
+ * Custom hook for managing user state with persistence
+ * 
+ * Uses Zustand for state management and AsyncStorage for persistence.
+ * Handles user authentication state, profile information, and storage cleanup.
+ * 
+ * @example
+ * ```tsx
+ * const { username, isLoggedIn, setUsername } = useUserStore();
+ * 
+ * // Set username
+ * setUsername('ammar');
+ * 
+ * // Check login status
+ * console.log(isLoggedIn); // true
+ * ```
+ */
 export const useUserStore = create<UserState>()(
     persist(
         (set) => ({
@@ -60,7 +83,21 @@ export const useUserStore = create<UserState>()(
     )
 );
 
-
+/**
+ * Utility function to clean up obsolete storage keys
+ * 
+ * Removes any storage keys that start with 'user-storage' except for
+ * the main 'user-storage' key. This helps prevent storage bloat from
+ * old or unused storage entries.
+ * 
+ * @async
+ * @returns {Promise<void>}
+ * 
+ * @example
+ * ```tsx
+ * await cleanupStorage();
+ * ```
+ */
 export const cleanupStorage = async () => {
     try {
         const keys = await AsyncStorage.getAllKeys();

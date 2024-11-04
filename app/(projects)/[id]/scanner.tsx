@@ -6,8 +6,26 @@ import type { BarcodeScanningResult } from "expo-camera";
 import { APIClient } from "@/api/client";
 import { useUserStore } from "@/store/UserStore";
 import { useProjectContext } from "@/context/ProjectContext";
-import { useAPI } from '@/context/APIContext';
+import { useAPI } from "@/context/APIContext";
 
+/**
+ * Scanner Screen Component
+ *
+ * Provides QR code scanning functionality for project locations with:
+ * - Camera permission handling
+ * - QR code parsing and validation
+ * - Location tracking submission
+ * - Points calculation and awarding
+ * - Duplicate visit prevention
+ *
+ * Uses expo-camera for QR scanning and integrates with project tracking system.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <Tabs.Screen name="scanner" component={ScannerScreen} />
+ * ```
+ */
 export default function ScannerScreen() {
   const { apiClient } = useAPI();
   const [scanned, setScanned] = useState(false);
@@ -36,6 +54,14 @@ export default function ScannerScreen() {
     );
   }
 
+  /**
+   * Parses QR code data into location and project information
+   *
+   * Expected format: "location_id:1,project_id:2,score_points:10"
+   *
+   * @param {string} data - Raw QR code data
+   * @returns {Object | null} Parsed data object or null if invalid
+   */
   const parseQRData = (data: string) => {
     try {
       // Split the data string by commas
@@ -49,14 +75,18 @@ export default function ScannerScreen() {
       });
 
       // Only validate location_id and project_id
-      if (!parsed.location_id || !parsed.project_id || 
-          isNaN(parsed.location_id) || isNaN(parsed.project_id)) {
+      if (
+        !parsed.location_id ||
+        !parsed.project_id ||
+        isNaN(parsed.location_id) ||
+        isNaN(parsed.project_id)
+      ) {
         throw new Error("Missing or invalid location_id or project_id");
       }
 
       return {
         location_id: parsed.location_id,
-        project_id: parsed.project_id
+        project_id: parsed.project_id,
       };
     } catch (error) {
       console.error("Error parsing QR code data:", error);
@@ -64,7 +94,19 @@ export default function ScannerScreen() {
     }
   };
 
-  const checkIfLocationVisited = async (projectId: number, locationId: number, participantUsername: string) => {
+  /**
+   * Checks if a location has been previously visited by the user
+   *
+   * @param {number} projectId - ID of the project
+   * @param {number} locationId - ID of the location
+   * @param {string} participantUsername - Username of the participant
+   * @returns {Promise<boolean>} True if location has been visited
+   */
+  const checkIfLocationVisited = async (
+    projectId: number,
+    locationId: number,
+    participantUsername: string
+  ) => {
     try {
       const visitedLocationIds = await apiClient.getUserVisitedLocationIds(
         projectId,
@@ -77,6 +119,20 @@ export default function ScannerScreen() {
     }
   };
 
+  /**
+   * Handles the submission of a tracking entry after QR scan
+   *
+   * Process:
+   * 1. Validates QR data
+   * 2. Checks for duplicate visits
+   * 3. Fetches location details
+   * 4. Submits tracking entry
+   * 5. Awards points
+   *
+   * @param {string} qrData - Raw QR code data
+   * @async
+   * @throws {Error} When tracking submission fails
+   */
   const handleTrackingSubmission = async (qrData: string) => {
     try {
       setLoading(true);
@@ -104,8 +160,12 @@ export default function ScannerScreen() {
       }
 
       // Fetch the location details to get the score_points
-      const locations = await apiClient.getProjectLocations(parsedData.project_id);
-      const location = locations.find(loc => loc.id === parsedData.location_id);
+      const locations = await apiClient.getProjectLocations(
+        parsedData.project_id
+      );
+      const location = locations.find(
+        (loc) => loc.id === parsedData.location_id
+      );
 
       if (!location) {
         Alert.alert("Error", "Location not found");
@@ -123,7 +183,7 @@ export default function ScannerScreen() {
       await apiClient.trackParticipant(trackingPayload);
       triggerRefresh();
       Alert.alert(
-        "Success", 
+        "Success",
         `Location tracked successfully! You earned ${location.score_points} points!`,
         [{ text: "OK" }]
       );
@@ -135,6 +195,12 @@ export default function ScannerScreen() {
     }
   };
 
+  /**
+   * Handles barcode scanning result
+   *
+   * @param {BarcodeScanningResult} result - Scan result from camera
+   * @async
+   */
   const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
     if (loading) return;
 
@@ -159,7 +225,11 @@ export default function ScannerScreen() {
             {loading ? "Processing..." : `Scanned data: ${scannedData}`}
           </Text>
           <View style={styles.buttonContainer}>
-            <Button title="Scan Again" onPress={() => setScanned(false)} disabled={loading} />
+            <Button
+              title="Scan Again"
+              onPress={() => setScanned(false)}
+              disabled={loading}
+            />
           </View>
         </View>
       )}
