@@ -1,130 +1,206 @@
-import { Project, ProjectLocation } from '@/types/api';
-import { useLocalSearchParams } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
-import * as Location from 'expo-location';
+import { Project, ProjectLocation } from "@/types/api";
+import { useLocalSearchParams, useRouter  } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import MapView, { Marker, Circle } from "react-native-maps";
+import * as Location from "expo-location";
+import { APIClient } from "@/api/client";
+import { useUserStore } from "@/store/UserStore";
+
+const JWT =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
+const apiClient = new APIClient(JWT);
 
 interface LocationCoords {
-    latitude: number;
-    longitude: number;
+  latitude: number;
+  longitude: number;
 }
 
 export default function MapScreen() {
-    const [userLocation, setUserLocation] = useState<LocationCoords | null>(null);
-    const [locations, setLocations] = useState<ProjectLocation[]>([]);
-    const [unlockedLocations, setUnlockedLocations] = useState<ProjectLocation[]>([]);
-    const [project, setProject] = useState<Project | null>(null);
-    const [loading, setLoading] = useState(true);
-    const { id } = useLocalSearchParams();
-    const projectId = id ? Number(id) : NaN;
-    const username = "s4829906";
+  const router = useRouter();
+  const [userLocation, setUserLocation] = useState<LocationCoords | null>(null);
+  const [locations, setLocations] = useState<ProjectLocation[]>([]);
+  const [unlockedLocations, setUnlockedLocations] = useState<ProjectLocation[]>(
+    []
+  );
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Simulate location setup with dummy data
-        const setupDummyLocation = async () => {
-            try {
-                // Brisbane coordinates as dummy location
-                const dummyLocation: LocationCoords = {
-                    latitude: -27.4705,
-                    longitude: 153.0260,
-                };
-
-                setUserLocation(dummyLocation);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error setting up dummy location:', error);
-                setLoading(false);
-            }
-        };
-
-        setupDummyLocation();
-    }, []);
-
-    useEffect(() => {
-      const setupLocation = async () => {
-          try {
-              const { status } = await Location.requestForegroundPermissionsAsync();
-              if (status !== 'granted') {
-                  console.error('Permission to access location was denied');
-                  setLoading(false);
-                  return;
-              }
-              const location = await Location.getCurrentPositionAsync({});
-              const initialLocation: LocationCoords = {
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude,
-              };
-              setUserLocation(initialLocation);
-  
-              const subscription = await Location.watchPositionAsync(
-                  {
-                      accuracy: Location.Accuracy.High,
-                      timeInterval: 5000,
-                      distanceInterval: 5,
-                  },
-                  (newLocation) => {
-                      setUserLocation({
-                          latitude: newLocation.coords.latitude,
-                          longitude: newLocation.coords.longitude,
-                      });
-                  }
-              );
-  
-              return () => {
-                  subscription.remove();
-              };
-  
-          } catch (error) {
-              console.error('Error setting up location:', error);
-              setLoading(false);
-          }
-      };
-  
-      setupLocation();
-  }, []);
-
-    if (loading || !userLocation) {
-        return (
-            <View style={styles.container}>
-                <ActivityIndicator size="large" color="#7862FC" />
-            </View>
-        );
+  const { id } = useLocalSearchParams();
+  const projectId = id ? Number(id) : NaN;
+  const { username } = useUserStore();
+  useEffect(() => {
+    if (!username) {
+      router.push("/profile");
+      return;
     }
+  }, [username]);
 
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        await Promise.all([setupLocation(), fetchProjectData()]);
+      } catch (error) {
+        console.error("Error initializing data:", error);
+        setError("Failed to initialize map data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeData();
+  }, [projectId]);
+
+  const setupLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setError("Location permission is required");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const initialLocation: LocationCoords = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      setUserLocation(initialLocation);
+
+      const subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 5,
+        },
+        (newLocation) => {
+          setUserLocation({
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+          });
+        }
+      );
+
+      return () => subscription.remove();
+    } catch (error) {
+      console.error("Error setting up location:", error);
+      setError("Failed to get location");
+    }
+  };
+
+  const fetchProjectData = async () => {
+    try {
+      // Get project details
+      const projects = await apiClient.getPublishedProjects();
+      const foundProject = projects.find((p) => p.id === projectId);
+      if (!foundProject) throw new Error("Project not found");
+      setProject(foundProject);
+
+      // Get project locations
+      const projectLocations = await apiClient.getProjectLocations(projectId);
+      setLocations(projectLocations);
+
+      // Get unlocked locations
+      const visitedLocationIds = await apiClient.getUserVisitedLocationIds(
+        projectId,
+        username
+      );
+      const unlockedLocs = projectLocations.filter((loc) =>
+        visitedLocationIds.includes(loc.id)
+      );
+      setUnlockedLocations(unlockedLocs);
+    } catch (error) {
+      console.error("Error fetching project data:", error);
+      setError("Failed to load project data");
+    }
+  };
+
+  const shouldDisplayAllLocations = () => {
+    return project?.homescreen_display === "Display all locations";
+  };
+
+  const getVisibleLocations = () => {
+    if (shouldDisplayAllLocations()) {
+      return locations;
+    }
+    return unlockedLocations;
+  };
+
+  if (loading || !userLocation) {
     return (
-        <View style={styles.container}>
-            <MapView
-                style={styles.map}
-                initialRegion={{
-                    latitude: userLocation.latitude,
-                    longitude: userLocation.longitude,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
-                }}
-                showsUserLocation={true}
-                showsMyLocationButton={true}
-            >
-                <Marker
-                    coordinate={{
-                        latitude: userLocation.latitude,
-                        longitude: userLocation.longitude,
-                    }}
-                    title="You are here"
-                    pinColor="#7862FC"
-                />
-            </MapView>
-        </View>
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#7862FC" />
+      </View>
     );
+  }
+
+  // if (error) {
+  //     return (
+  //         <View style={styles.container}>
+  //             <Text style={{ color: 'red' }}>{error}</Text>
+  //         </View>
+  //     );
+  // }
+
+  return (
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+      >
+        {getVisibleLocations().map((location) => {
+          // Parse location coordinates from string "(lat,lng)"
+          const [lat, lng] = location.location_position
+            .replace(/[()]/g, "")
+            .split(",")
+            .map((coord) => parseFloat(coord.trim()));
+
+          if (isNaN(lat) || isNaN(lng)) {
+            console.error(`Invalid coordinates for location ${location.id}`);
+            return null;
+          }
+
+          const isUnlocked = unlockedLocations.some(
+            (loc) => loc.id === location.id
+          );
+
+          return (
+            <React.Fragment key={location.id}>
+              <Marker
+                coordinate={{ latitude: lat, longitude: lng }}
+                title={location.location_name}
+                pinColor={isUnlocked ? "green" : "red"}
+              />
+              {(isUnlocked || shouldDisplayAllLocations()) && (
+                <Circle
+                  center={{ latitude: lat, longitude: lng }}
+                  radius={200} // 200 meters radius
+                  strokeColor="rgba(0, 150, 136, 0.5)"
+                  fillColor="rgba(0, 150, 136, 0.2)"
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </MapView>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-      flex: 1,
+    flex: 1,
   },
   map: {
-      flex: 1,
-      width: '100%',
-      height: '100%',
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
 });

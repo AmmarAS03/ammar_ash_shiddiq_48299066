@@ -168,7 +168,7 @@ export class APIClient {
 
   async getUserVisitedLocationIds(
     projectId: number,
-    participantUsername: string
+    participantUsername: string | null
   ): Promise<number[]> {
     try {
       const trackingData = await this.fetchWithAuth<Tracking[]>(

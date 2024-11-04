@@ -1,8 +1,11 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
+import { ProjectProvider } from '@/context/ProjectContext';
 
 export default function ProjectTabsLayout() {
+  const { id } = useLocalSearchParams();
   return (
+    <ProjectProvider>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#f4511e',
@@ -42,6 +45,7 @@ export default function ProjectTabsLayout() {
             />
           ),
         }}
+        initialParams={{ id }} 
       />
       <Tabs.Screen
         name="scanner"
@@ -57,5 +61,6 @@ export default function ProjectTabsLayout() {
         }}
       />
     </Tabs>
+    </ProjectProvider>
   );
 }

@@ -115,7 +115,6 @@ export default function ScannerScreen() {
           </Text>
           <View style={styles.buttonContainer}>
             <Button title="Scan Again" onPress={() => setScanned(false)} disabled={loading} />
-            <Button title="Go to Map" onPress={() => router.push("/map")} disabled={loading}/>
           </View>
         </View>
       )}
