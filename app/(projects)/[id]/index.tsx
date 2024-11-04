@@ -12,6 +12,7 @@ import { Project, ProjectLocation } from "../../../src/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useUserStore } from "@/store/UserStore";
 import WebView from "react-native-webview";
+import { useProjectContext } from "@/context/ProjectContext";
 
 const JWT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
@@ -28,6 +29,7 @@ export default function ProjectDetails() {
   const [userPoints, setUserPoints] = useState(0);
   const [visitedLocations, setVisitedLocations] = useState(0);
   const [visitedLocationIds, setVisitedLocationIds] = useState<number[]>([]);
+  const { refreshTrigger } = useProjectContext();
 
   useEffect(() => {
     const loadProjectData = async () => {
@@ -87,7 +89,7 @@ export default function ProjectDetails() {
     };
 
     loadProjectData();
-  }, [id]);
+  }, [id, refreshTrigger]);
 
   // Custom header configuration
   useEffect(() => {

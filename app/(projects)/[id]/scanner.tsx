@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import type { BarcodeScanningResult } from "expo-camera";
 import { APIClient } from "@/api/client";
 import { useUserStore } from "@/store/UserStore";
+import { useProjectContext } from "@/context/ProjectContext";
 
 const JWT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
@@ -16,6 +17,7 @@ export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [loading, setLoading] = useState(false);
   const { username } = useUserStore();
+  const { triggerRefresh } = useProjectContext();
 
   if (!permission) {
     return (
@@ -73,13 +75,11 @@ export default function ScannerScreen() {
         participant_username: username || "",
       };
 
-      console.log("COBA KIRIM", trackingPayload)
-
       await apiClient.trackParticipant(trackingPayload);
+      triggerRefresh()
       Alert.alert("Success", "Location tracked successfully!", [
         {
-          text: "OK",
-          onPress: () => router.push("/map"), // or navigate wherever you want after success
+          text: "OK"
         },
       ]);
     } catch (error) {

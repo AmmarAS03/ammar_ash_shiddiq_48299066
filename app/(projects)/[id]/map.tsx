@@ -6,6 +6,7 @@ import MapView, { Marker, Circle } from "react-native-maps";
 import * as Location from "expo-location";
 import { APIClient } from "@/api/client";
 import { useUserStore } from "@/store/UserStore";
+import { useProjectContext } from "@/context/ProjectContext";
 
 const JWT =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
@@ -26,6 +27,7 @@ export default function MapScreen() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { refreshTrigger } = useProjectContext();
 
   const { id } = useLocalSearchParams();
   const projectId = id ? Number(id) : NaN;
@@ -50,7 +52,7 @@ export default function MapScreen() {
     };
 
     initializeData();
-  }, [projectId]);
+  }, [projectId, refreshTrigger]);
 
   const setupLocation = async () => {
     try {
