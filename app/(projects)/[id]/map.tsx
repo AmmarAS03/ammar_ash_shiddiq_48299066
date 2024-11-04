@@ -4,13 +4,9 @@ import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import * as Location from "expo-location";
-import { APIClient } from "@/api/client";
 import { useUserStore } from "@/store/UserStore";
 import { useProjectContext } from "@/context/ProjectContext";
-
-const JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
-const apiClient = new APIClient(JWT);
+import { useAPI } from '@/context/APIContext';
 
 interface LocationCoords {
   latitude: number;
@@ -18,6 +14,7 @@ interface LocationCoords {
 }
 
 export default function MapScreen() {
+  const { apiClient } = useAPI();
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<LocationCoords | null>(null);
   const [locations, setLocations] = useState<ProjectLocation[]>([]);

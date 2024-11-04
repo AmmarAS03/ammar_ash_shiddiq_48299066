@@ -180,4 +180,36 @@ export class APIClient {
       return [];
     }
   }
+
+  async getLocationParticipantCounts(projectId: number): Promise<Record<number, number>> {
+    try {
+      // Get all tracking entries for this project, selecting location_id and participant_username
+      const trackingData = await this.fetchWithAuth<{
+        location_id: number;
+        participant_username: string;
+      }[]>(
+        `/tracking?project_id=eq.${projectId}&select=location_id,participant_username&distinct`
+      );
+  
+      // Create a map to store counts for each location
+      const locationCounts: Record<number, number> = {};
+  
+      // Group tracking data by location_id and count unique participants
+      trackingData.forEach((track) => {
+        if (!locationCounts[track.location_id]) {
+          const uniqueParticipants = new Set(
+            trackingData
+              .filter((t) => t.location_id === track.location_id)
+              .map((t) => t.participant_username)
+          );
+          locationCounts[track.location_id] = uniqueParticipants.size;
+        }
+      });
+  
+      return locationCounts;
+    } catch (error) {
+      console.error("Error getting location participant counts:", error);
+      return {};
+    }
+  }
 }

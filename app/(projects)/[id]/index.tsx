@@ -13,12 +13,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useUserStore } from "@/store/UserStore";
 import WebView from "react-native-webview";
 import { useProjectContext } from "@/context/ProjectContext";
-
-const JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
-const apiClient = new APIClient(JWT);
+import { useAPI } from "@/context/APIContext";
 
 export default function ProjectDetails() {
+  const { apiClient } = useAPI();
   const { id } = useLocalSearchParams();
   const [project, setProject] = useState<Project | null>(null);
   const [locations, setLocations] = useState<ProjectLocation[]>([]);
@@ -30,6 +28,10 @@ export default function ProjectDetails() {
   const [visitedLocations, setVisitedLocations] = useState(0);
   const [visitedLocationIds, setVisitedLocationIds] = useState<number[]>([]);
   const { refreshTrigger } = useProjectContext();
+  const [totalParticipants, setTotalParticipants] = useState(0);
+  const [locationParticipantCounts, setLocationParticipantCounts] = useState<
+    Record<number, number>
+  >({});
 
   useEffect(() => {
     const loadProjectData = async () => {
@@ -76,6 +78,15 @@ export default function ProjectDetails() {
 
         setUserPoints(points);
         setVisitedLocations(visitedCount);
+        const locationCounts = await apiClient.getLocationParticipantCounts(
+          Number(id)
+        );
+        setLocationParticipantCounts(locationCounts);
+
+        const participantCount = await apiClient.getProjectParticipantCount(
+          Number(id)
+        );
+        setTotalParticipants(participantCount);
 
         router.setParams({
           title: foundProject.title,
@@ -108,6 +119,19 @@ export default function ProjectDetails() {
     );
   }
 
+  const getScoringMethodDisplay = () => {
+    switch (project?.participant_scoring) {
+      case "Not Scored":
+        return "This project is not scored";
+      case "Number of Scanned QR Codes":
+        return "Score by scanning QR codes";
+      case "Number of Locations Entered":
+        return "Score by entering locations";
+      default:
+        return "";
+    }
+  };
+
   if (error || !project) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-100">
@@ -136,6 +160,14 @@ export default function ProjectDetails() {
 
           <Text className="text-lg font-bold mb-2">Initial Clue</Text>
           <Text className="text-gray-700">{project.initial_clue}</Text>
+
+          <Text className="text-gray-600 text-center mt-5 font-bold">
+            {getScoringMethodDisplay()}
+          </Text>
+
+          <Text className="text-gray-600 text-center">
+            Total Participants: {totalParticipants}
+          </Text>
         </View>
 
         {/* Stats Card */}
@@ -180,6 +212,10 @@ export default function ProjectDetails() {
                     className="rounded-lg"
                   />
                 </View>
+                <Text className="text-gray-600 mt-2">
+                  Participants who visited:{" "}
+                  {locationParticipantCounts[location.id] || 0}
+                </Text>
               </View>
             ))}
         </View>

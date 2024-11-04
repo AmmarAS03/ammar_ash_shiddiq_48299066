@@ -9,15 +9,12 @@ import {
   RefreshControl 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { APIClient } from '../../src/api/client';
 import { Project } from '../../src/types/api';
 import { ProjectCard } from '../../src/components/ProjectCard';
-
-// You should store this JWT securely in practice
-const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
-const apiClient = new APIClient(JWT);
+import { useAPI } from '@/context/APIContext';
 
 export default function Index() {
+  const { apiClient } = useAPI();
   const [projects, setProjects] = useState<Project[]>([]);
   const [participantCounts, setParticipantCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);

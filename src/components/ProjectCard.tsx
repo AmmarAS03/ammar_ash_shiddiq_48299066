@@ -1,19 +1,17 @@
 // src/components/ProjectCard.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Project } from "../types/api";
 import { APIClient } from "@/api/client";
+import { useAPI } from '@/context/APIContext';
 
 interface ProjectCardProps {
   project: Project;
 }
 
-const JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
-const apiClient = new APIClient(JWT);
-
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { apiClient } = useAPI();
   const router = useRouter();
   const [participantCount, setParticipantCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);

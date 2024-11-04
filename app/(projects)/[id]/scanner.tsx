@@ -6,12 +6,10 @@ import type { BarcodeScanningResult } from "expo-camera";
 import { APIClient } from "@/api/client";
 import { useUserStore } from "@/store/UserStore";
 import { useProjectContext } from "@/context/ProjectContext";
-
-const JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsInVzZXJuYW1lIjoiczQ4Mjk5MDYifQ.uv2euB3WMOZ18RKDS-ChV3JHQ00mf30Qqd-pREK-xGo";
-const apiClient = new APIClient(JWT);
+import { useAPI } from '@/context/APIContext';
 
 export default function ScannerScreen() {
+  const { apiClient } = useAPI();
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState("");
   const [permission, requestPermission] = useCameraPermissions();
@@ -40,18 +38,25 @@ export default function ScannerScreen() {
 
   const parseQRData = (data: string) => {
     try {
+      // Split the data string by commas
       const pairs = data.split(",");
-      const parsed: Record<string, string> = {};
+      const parsed: Record<string, number> = {};
 
+      // Parse each key-value pair
       pairs.forEach((pair) => {
         const [key, value] = pair.split(":");
-        parsed[key] = value;
+        parsed[key.trim()] = parseInt(value.trim(), 10);
       });
 
+      // Only validate location_id and project_id
+      if (!parsed.location_id || !parsed.project_id || 
+          isNaN(parsed.location_id) || isNaN(parsed.project_id)) {
+        throw new Error("Missing or invalid location_id or project_id");
+      }
+
       return {
-        location_id: parseInt(parsed.location_id),
-        project_id: parseInt(parsed.project_id),
-        points: parseInt(parsed.points),
+        location_id: parsed.location_id,
+        project_id: parsed.project_id
       };
     } catch (error) {
       console.error("Error parsing QR code data:", error);
@@ -69,14 +74,27 @@ export default function ScannerScreen() {
         return;
       }
 
+      // Fetch the location details to get the score_points
+      const locations = await apiClient.getProjectLocations(parsedData.project_id);
+      const location = locations.find(loc => loc.id === parsedData.location_id);
+
+      if (!location) {
+        Alert.alert("Error", "Location not found");
+        return;
+      }
+
       const trackingPayload = {
-        ...parsedData,
+        project_id: parsedData.project_id,
+        location_id: parsedData.location_id,
+        points: location.score_points, // Use the score_points from the location
         username: "s4829906",
         participant_username: username || "",
       };
 
+      console.log("Sending tracking payload:", trackingPayload);
+
       await apiClient.trackParticipant(trackingPayload);
-      triggerRefresh()
+      triggerRefresh();
       Alert.alert("Success", "Location tracked successfully!", [
         {
           text: "OK"
