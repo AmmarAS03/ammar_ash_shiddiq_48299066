@@ -1,12 +1,12 @@
 import { Project, ProjectLocation } from "@/types/api";
-import { useLocalSearchParams, useRouter  } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import * as Location from "expo-location";
 import { useUserStore } from "@/store/UserStore";
 import { useProjectContext } from "@/context/ProjectContext";
-import { useAPI } from '@/context/APIContext';
+import { useAPI } from "@/context/APIContext";
 
 interface LocationCoords {
   latitude: number;
@@ -128,7 +128,7 @@ export default function MapScreen() {
   if (loading || !userLocation) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#7862FC" />
+        <ActivityIndicator size="large" color="#f4511e" />
       </View>
     );
   }
@@ -176,6 +176,7 @@ export default function MapScreen() {
                 coordinate={{ latitude: lat, longitude: lng }}
                 title={location.location_name}
                 pinColor={isUnlocked ? "green" : "red"}
+                description={isUnlocked || location.clue ? location.clue : undefined}
               />
               {(isUnlocked || shouldDisplayAllLocations()) && (
                 <Circle

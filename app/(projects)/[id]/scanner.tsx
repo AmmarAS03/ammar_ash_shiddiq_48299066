@@ -64,6 +64,19 @@ export default function ScannerScreen() {
     }
   };
 
+  const checkIfLocationVisited = async (projectId: number, locationId: number, participantUsername: string) => {
+    try {
+      const visitedLocationIds = await apiClient.getUserVisitedLocationIds(
+        projectId,
+        participantUsername
+      );
+      return visitedLocationIds.includes(locationId);
+    } catch (error) {
+      console.error("Error checking visited locations:", error);
+      return false;
+    }
+  };
+
   const handleTrackingSubmission = async (qrData: string) => {
     try {
       setLoading(true);
@@ -71,6 +84,22 @@ export default function ScannerScreen() {
 
       if (!parsedData) {
         Alert.alert("Error", "Invalid QR code format");
+        return;
+      }
+
+      // Check if location has been visited
+      const hasVisited = await checkIfLocationVisited(
+        parsedData.project_id,
+        parsedData.location_id,
+        username || ""
+      );
+
+      if (hasVisited) {
+        Alert.alert(
+          "Already Visited",
+          "You have already visited this location!",
+          [{ text: "OK" }]
+        );
         return;
       }
 
@@ -86,20 +115,18 @@ export default function ScannerScreen() {
       const trackingPayload = {
         project_id: parsedData.project_id,
         location_id: parsedData.location_id,
-        points: location.score_points, // Use the score_points from the location
+        points: location.score_points,
         username: "s4829906",
         participant_username: username || "",
       };
 
-      console.log("Sending tracking payload:", trackingPayload);
-
       await apiClient.trackParticipant(trackingPayload);
       triggerRefresh();
-      Alert.alert("Success", "Location tracked successfully!", [
-        {
-          text: "OK"
-        },
-      ]);
+      Alert.alert(
+        "Success", 
+        `Location tracked successfully! You earned ${location.score_points} points!`,
+        [{ text: "OK" }]
+      );
     } catch (error) {
       console.error("Error submitting tracking:", error);
       Alert.alert("Error", "Failed to track location. Please try again.");

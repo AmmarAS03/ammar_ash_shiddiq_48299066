@@ -158,8 +158,16 @@ export default function ProjectDetails() {
               "Follow the clues and scan the QR codes once you get to the building location."}
           </Text>
 
-          <Text className="text-lg font-bold mb-2">Initial Clue</Text>
-          <Text className="text-gray-700">{project.initial_clue}</Text>
+          {project.homescreen_display === "Display initial clue" ? (
+            <>
+              <Text className="text-lg font-bold mb-2">Initial Clue</Text>
+              <Text className="text-gray-700">{project.initial_clue}</Text>
+            </>
+          ) : (
+            <Text className="text-blue-500 text-center">
+              Open the Map tab to see all available locations!
+            </Text>
+          )}
 
           <Text className="text-gray-600 text-center mt-5 font-bold">
             {getScoringMethodDisplay()}
